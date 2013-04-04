@@ -1,0 +1,3 @@
+#!/bin/bash
+#Einfacher unzip Wrapper der in ein Verzeichniss entpackt, das wie das Archiv (ohne .zip) heisst
+unzip -d "$(echo $*|sed 's/.zip//')" "$*";

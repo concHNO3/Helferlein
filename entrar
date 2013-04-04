@@ -1,0 +1,3 @@
+#!/bin/bash
+#Einfacher unrar Wrapper der in ein Verzeichniss entpackt, das wie das Archiv (ohne .rar) heisst
+unrar e "$DATEI" "$(echo $DATEI|sed 's/.rar//')"/ ;
