@@ -13,23 +13,36 @@ PAGES=$(pdfinfo "$*" 2>&1 | grep "Pages:" | cut -d ":" -f 2 | sed -e 's/^[ \t]*/
 BC="$(which bc)";
 SEITENPROHEFT=20;
 HEFTE=$(echo "scale=0 ; $PAGES/$SEITENPROHEFT + 1"| $BC);
+WEITERMACHEN=0;
+ECHO="/bin/echo"
+
 
 echo "Converting $INPUT into Books"
 for i in {1..$HEFTE};
 do
-	UGRENZE=$(echo "scale=0;($i-1)*$SEITENPROHEFT + 1" | $BC);
-	OGRENZE=$(echo "scale=0;$i * $SEITENPROHEFT" |$BC);
-	NEWNAME="$BASIS""_BOOK_""$(printf "%.4d" $i)"".pdf";
-	if [[ $OGRENZE -le $PAGES ]] 
+	if [[ $WEITERMACHEN -eq 0 ]]
 	then
-		echo "$NEWNAME von $UGRENZE bis $OGRENZE";
-		$PDFBOOK --outfile "$NEWNAME" "$INPUT" "$UGRENZE"-"$OGRENZE";
-	else
-		OGRENZE=$PAGES
-		if [[ $UGRENZE -le $PAGES ]]
+		UGRENZE=$(echo "scale=0;($i-1)*$SEITENPROHEFT + 1" | $BC);
+		OGRENZE=$(echo "scale=0;$i * $SEITENPROHEFT" |$BC);
+		EXTREM=$(echo "scale=0;$OGRENZE + 4"|$BC);
+		if [[ $PAGES -le $EXTREM ]]
 		then
-			echo "$NEWNAME von $UGRENZE bis $OGRENZE";
-			$PDFBOOK --outfile "$NEWNAME" "$INPUT" "$UGRENZE"-"$OGRENZE";
+			OGRENZE=$PAGES;
+			WEITERMACHEN=1;
+		fi
+		NEWNAME="$BASIS""_BOOK_""$(printf "%.4d" $i)"".pdf";
+		if [[ $OGRENZE -le $PAGES ]] 
+		then
+			$ECHO -n "$NEWNAME von $UGRENZE bis $OGRENZE  ";
+			$PDFBOOK --outfile "$NEWNAME" "$INPUT" "$UGRENZE"-"$OGRENZE" 2> /dev/null && echo DONE;
+		else
+			OGRENZE=$PAGES
+			if [[ $UGRENZE -le $PAGES ]]
+			then
+				$ECHO -n "$NEWNAME von $UGRENZE bis $OGRENZE  ";
+				$PDFBOOK --outfile "$NEWNAME" "$INPUT" "$UGRENZE"-"$OGRENZE" 2> /dev/null && echo DONE;
+				WEITERMACHEN=1;
+			fi
 		fi
 	fi
 done;
